@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Bingo de Disfraces</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0d0a14">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Bingo">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-180.png">
+<style>
+:root{
+  --bg:#0d0a14; --bg2:#1a1226; --orange:#ff7a1a; --orange2:#ffb347;
+  --violet:#6b3fa0; --violet2:#3a2260; --text:#f3eefb; --muted:#b9aed0;
+  --green:#17c964; --green2:#0a8f43;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+html,body{margin:0;background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Rounded","Segoe UI",Roboto,sans-serif;
+  -webkit-text-size-adjust:100%}
+body{
+  min-height:100vh;min-height:100dvh;
+  padding:max(10px,env(safe-area-inset-top)) 12px max(18px,env(safe-area-inset-bottom));
+  background:
+    radial-gradient(circle at 50% -10%,rgba(255,122,26,.20),transparent 55%),
+    radial-gradient(circle at 100% 100%,rgba(107,63,160,.28),transparent 50%),
+    var(--bg);
+  user-select:none;-webkit-user-select:none;
+  overflow-x:hidden;position:relative;
+}
+.web{position:fixed;width:120px;height:120px;pointer-events:none;opacity:.5;z-index:0}
+.web.tl{top:0;left:0}
+.web.tr{top:0;right:0;transform:scaleX(-1)}
+.web.bl{bottom:0;left:0;transform:scaleY(-1)}
+.web.br{bottom:0;right:0;transform:scale(-1,-1)}
+main{position:relative;z-index:1;max-width:520px;margin:0 auto}
+header{text-align:center;padding:4px 0 8px}
+h1{margin:0;font-size:clamp(20px,6.2vw,28px);letter-spacing:.5px;font-weight:900;
+  background:linear-gradient(180deg,var(--orange2),var(--orange));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  text-shadow:0 0 18px rgba(255,122,26,.35);filter:drop-shadow(0 2px 0 rgba(0,0,0,.5))}
+.deco{display:flex;justify-content:center;gap:10px;font-size:15px;opacity:.85;margin-top:2px;letter-spacing:4px}
+.deco span:nth-child(odd){animation:bob 3s ease-in-out infinite}
+.deco span:nth-child(even){animation:bob 3.6s ease-in-out infinite reverse}
+@keyframes bob{50%{transform:translateY(-3px)}}
+.progress{margin:8px auto 4px;display:flex;align-items:center;gap:10px}
+.bar{flex:1;height:10px;border-radius:99px;background:var(--bg2);border:1px solid var(--violet2);overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--orange),var(--green));transition:width .35s ease}
+.count{font-weight:800;font-size:14px;color:var(--orange2);white-space:nowrap}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+.cell{
+  aspect-ratio:1/0.92;border-radius:16px;padding:6px 4px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  background:linear-gradient(160deg,#1f1630,#120d1c);
+  border:2px solid var(--violet);color:var(--text);font:inherit;
+  box-shadow:inset 0 0 0 1px rgba(255,122,26,.25),0 3px 8px rgba(0,0,0,.5);
+  text-align:center;cursor:pointer;position:relative;overflow:hidden;
+  transition:transform .15s ease,background .25s ease,border-color .25s ease;
+  -webkit-appearance:none;appearance:none;
+}
+.cell:active{transform:scale(.95)}
+.cell .em{font-size:clamp(22px,7.5vw,32px);line-height:1}
+.cell .nm{font-size:clamp(11px,3.4vw,14.5px);font-weight:700;line-height:1.12;word-break:break-word;hyphens:auto;-webkit-hyphens:auto;padding:0 2px}
+.cell::before{content:"";position:absolute;top:0;right:0;width:16px;height:16px;
+  background:radial-gradient(circle at 100% 0,rgba(255,122,26,.55),transparent 70%)}
+.cell.on{
+  background:linear-gradient(160deg,#1ee06f,var(--green2));
+  border-color:#b6ffd3;color:#04210f;
+  box-shadow:0 0 14px rgba(23,201,100,.55),inset 0 0 0 1px rgba(255,255,255,.35);
+  animation:pop .35s ease;
+}
+.cell.on .nm{text-shadow:0 1px 0 rgba(255,255,255,.35)}
+.cell.on::after{content:"✓";position:absolute;top:3px;left:7px;font-size:14px;font-weight:900;color:#04210f}
+.cell.on::before{display:none}
+.cell.swap{border-color:var(--orange);animation:pulse 1s ease-in-out infinite}
+@keyframes pop{0%{transform:scale(.9)}60%{transform:scale(1.07)}100%{transform:scale(1)}}
+@keyframes pulse{50%{box-shadow:0 0 14px rgba(255,122,26,.8)}}
+.actions{display:flex;gap:8px;margin-top:14px}
+.btn{flex:1;padding:13px 10px;border-radius:14px;border:2px solid var(--violet);background:var(--bg2);color:var(--text);
+  font:inherit;font-weight:800;font-size:14px;-webkit-appearance:none;appearance:none}
+.btn:active{transform:scale(.97)}
+.btn.reset{border-color:var(--orange);background:linear-gradient(180deg,#ff8a2e,#e0600a);color:#1a0b00}
+.btn.alt.active{background:var(--orange);color:#1a0b00;border-color:var(--orange2)}
+.hint{margin-top:8px;text-align:center;font-size:12.5px;color:var(--muted);min-height:18px}
+footer{margin-top:10px;text-align:center;font-size:11px;color:#6f6388}
+/* overlays */
+.overlay{position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;
+  background:rgba(5,3,10,.72);padding:20px}
+.overlay.show{display:flex;animation:fade .2s ease}
+@keyframes fade{from{opacity:0}}
+.card{width:100%;max-width:340px;text-align:center;border-radius:24px;padding:24px 18px;
+  background:linear-gradient(160deg,#2a1a44,#120b1e);border:3px solid var(--orange);
+  box-shadow:0 0 30px rgba(255,122,26,.5);animation:zoom .45s cubic-bezier(.2,1.4,.4,1)}
+@keyframes zoom{from{transform:scale(.5);opacity:0}}
+.card h2{margin:6px 0;font-size:34px;font-weight:900;color:var(--orange2);text-shadow:0 0 16px rgba(255,122,26,.7)}
+.card p{margin:4px 0 14px;color:var(--muted);font-size:15px}
+.card .big{font-size:54px;line-height:1}
+.card .btn{flex:none;width:100%}
+.card.bingo{border-color:var(--green);box-shadow:0 0 40px rgba(23,201,100,.6)}
+.card.bingo h2{font-size:42px;color:#7dffb0;text-shadow:0 0 18px rgba(23,201,100,.8)}
+.dlg-btns{display:flex;gap:8px}
+.fx{position:fixed;inset:0;z-index:60;pointer-events:none;overflow:hidden}
+.fx span{position:absolute;top:-40px;animation:fall linear forwards;will-change:transform}
+@keyframes fall{to{transform:translateY(112vh) rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important}}
+</style>
+</head>
+<body>
+<svg class="web tl" viewBox="0 0 120 120" aria-hidden="true"><g fill="none" stroke="#cfc4e6" stroke-width="1"><path d="M0 0L120 0M0 0L110 50M0 0L80 90M0 0L45 112M0 0L0 120"/><path d="M30 0Q26 26 0 30M60 0Q52 52 0 60M90 0Q78 78 0 90"/></g><circle cx="52" cy="52" r="0"/></svg>
+<svg class="web tr" viewBox="0 0 120 120" aria-hidden="true"><g fill="none" stroke="#cfc4e6" stroke-width="1"><path d="M0 0L120 0M0 0L110 50M0 0L80 90M0 0L45 112M0 0L0 120"/><path d="M30 0Q26 26 0 30M60 0Q52 52 0 60M90 0Q78 78 0 90"/></g></svg>
+<svg class="web bl" viewBox="0 0 120 120" aria-hidden="true"><g fill="none" stroke="#cfc4e6" stroke-width="1"><path d="M0 0L120 0M0 0L110 50M0 0L80 90M0 0L45 112M0 0L0 120"/><path d="M30 0Q26 26 0 30M60 0Q52 52 0 60M90 0Q78 78 0 90"/></g></svg>
+<svg class="web br" viewBox="0 0 120 120" aria-hidden="true"><g fill="none" stroke="#cfc4e6" stroke-width="1"><path d="M0 0L120 0M0 0L110 50M0 0L80 90M0 0L45 112M0 0L0 120"/><path d="M30 0Q26 26 0 30M60 0Q52 52 0 60M90 0Q78 78 0 90"/></g></svg>
+
+<main>
+  <header>
+    <h1>🎃 BINGO DE DISFRACES 🎃</h1>
+    <div class="deco" aria-hidden="true"><span>🦇</span><span>🕷️</span><span>🌙</span><span>👻</span><span>⭐</span><span>🕷️</span><span>🦇</span></div>
+    <div class="progress">
+      <div class="bar"><i id="barFill"></i></div>
+      <div class="count" id="count">0 de 21</div>
+    </div>
+  </header>
+
+  <div class="grid" id="grid" role="grid" aria-label="Tablero de bingo"></div>
+  <div class="hint" id="hint"></div>
+
+  <div class="actions">
+    <button class="btn alt" id="altBtn" type="button">🔁 Cambiar disfraz</button>
+    <button class="btn reset" id="resetBtn" type="button">🧹 Reiniciar bingo</button>
+  </div>
+  <footer>🧙‍♀️ 🧪 Se guarda solo en tu iPhone · Funciona sin internet</footer>
+</main>
+
+<div class="overlay" id="ov"><div class="card" id="ovCard">
+  <div class="big" id="ovEm"></div><h2 id="ovTitle"></h2><p id="ovMsg"></p>
+  <button class="btn" id="ovOk" type="button">¡Seguir jugando!</button>
+</div></div>
+
+<div class="overlay" id="confirm"><div class="card">
+  <div class="big">🧹</div><h2 style="font-size:26px">¿Reiniciar bingo?</h2>
+  <p>Se van a borrar todos los casilleros marcados y los disfraces vuelven al orden original.</p>
+  <div class="dlg-btns">
+    <button class="btn" id="cNo" type="button">Cancelar</button>
+    <button class="btn reset" id="cYes" type="button">Sí, reiniciar</button>
+  </div>
+</div></div>
+
+<div class="fx" id="fx" aria-hidden="true"></div>
+
+<script>
+(function(){
+"use strict";
+var COLS=3, ROWS=7, TOTAL=21, KEY="bingo-disfraces-v1";
+
+var INITIAL=[
+ {n:"Conejita",e:"🐰"},{n:"Pirata",e:"🏴‍☠️"},{n:"Cosplay",e:"🎭"},{n:"Abuelas",e:"👵"},
+ {n:"Caperucita",e:"🧺"},{n:"Ángel",e:"😇"},{n:"Demonio",e:"😈"},{n:"Rapunzel",e:"👸"},
+ {n:"Pandillero / GTA",e:"🔫"},{n:"Preso de Breaking Bad",e:"🧪"},{n:"Policía",e:"👮"},
+ {n:"Animal print",e:"🐆"},{n:"Hijo de Goofy",e:"🐶"},{n:"Hotel Transilvania",e:"🧛"},
+ {n:"¿Dónde están las rubias?",e:"👱‍♀️"},{n:"Spiderman",e:"🕷️"},{n:"El lago de los cisnes",e:"🦢"},
+ {n:"Río",e:"🦜"},{n:"Gatúbela",e:"🐱"},{n:"Fórmula 1",e:"🏎️"},{n:"Jugador de fútbol",e:"⚽"}
+];
+var INITIAL_ALT={n:"Vaca y vaquero o dinosaurio",e:"🐄"};
+
+/* ---- Líneas: 3 consecutivos horizontal, vertical y diagonal ---- */
+function buildLines(){
+  var L=[], r, c, idx=function(r,c){return r*COLS+c;};
+  for(r=0;r<ROWS;r++) L.push([idx(r,0),idx(r,1),idx(r,2)]);                 // 7 horizontales
+  for(c=0;c<COLS;c++) for(r=0;r<=ROWS-3;r++) L.push([idx(r,c),idx(r+1,c),idx(r+2,c)]); // 15 verticales
+  for(r=0;r<=ROWS-3;r++){                                                    // 10 diagonales (ventanas 3x3)
+    L.push([idx(r,0),idx(r+1,1),idx(r+2,2)]);
+    L.push([idx(r,2),idx(r+1,1),idx(r+2,0)]);
+  }
+  return L;
+}
+var LINES=buildLines();
+
+function $(id){return document.getElementById(id);}
+var gridEl=$("grid"), cells=[];
+var state=freshState();
+var prevDone={};      // líneas completas en el estado anterior
+var swapMode=false;
+
+function freshState(){
+  return {names:INITIAL.map(function(x){return {n:x.n,e:x.e};}),
+          alt:{n:INITIAL_ALT.n,e:INITIAL_ALT.e},
+          marked:new Array(TOTAL).fill(false)};
+}
+function valid(s){
+  return s&&Array.isArray(s.names)&&s.names.length===TOTAL&&Array.isArray(s.marked)&&s.marked.length===TOTAL&&s.alt&&typeof s.alt.n==="string";
+}
+function load(){
+  try{var raw=localStorage.getItem(KEY); if(raw){var s=JSON.parse(raw); if(valid(s)) state=s;}}catch(e){}
+}
+function save(){ try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){} }
+
+function doneLines(){
+  var o={}; LINES.forEach(function(l,i){ if(l.every(function(k){return state.marked[k];})) o[i]=true; });
+  return o;
+}
+function count(){return state.marked.filter(Boolean).length;}
+
+function build(){
+  gridEl.innerHTML="";
+  cells=[];
+  for(var i=0;i<TOTAL;i++){
+    var b=document.createElement("button");
+    b.type="button"; b.className="cell"; b.setAttribute("role","gridcell");
+    b.innerHTML='<span class="em"></span><span class="nm"></span>';
+    (function(i){ b.addEventListener("click",function(){onCell(i);}); })(i);
+    gridEl.appendChild(b); cells.push(b);
+  }
+}
+function render(){
+  for(var i=0;i<TOTAL;i++){
+    var b=cells[i];
+    b.querySelector(".em").textContent=state.names[i].e;
+    b.querySelector(".nm").textContent=state.names[i].n;
+    b.classList.toggle("on",!!state.marked[i]);
+    b.classList.toggle("swap",swapMode);
+    b.setAttribute("aria-pressed",state.marked[i]?"true":"false");
+  }
+  var n=count();
+  $("count").textContent=n+" de "+TOTAL;
+  $("barFill").style.width=(n/TOTAL*100)+"%";
+  var alt=$("altBtn");
+  alt.classList.toggle("active",swapMode);
+  alt.textContent=swapMode?"✖ Cancelar cambio":"🔁 Cambiar disfraz";
+  $("hint").textContent=swapMode?("Tocá el casillero que querés reemplazar por: "+state.alt.e+" "+state.alt.n):"";
+}
+
+function onCell(i){
+  if(swapMode){
+    var old=state.names[i];
+    state.names[i]=state.alt; state.alt=old;
+    state.marked[i]=false;
+    swapMode=false;
+    prevDone=doneLines(); save(); render();
+    return;
+  }
+  state.marked[i]=!state.marked[i];
+  var now=doneLines(), isNew=false;
+  for(var k in now) if(!prevDone[k]) isNew=true;
+  prevDone=now; save(); render();
+  if(state.marked[i]){
+    if(count()===TOTAL) celebrate(true);
+    else if(isNew) celebrate(false);
+  }
+}
+
+/* ---- Celebración ---- */
+var fxTimer=null;
+function celebrate(bingo){
+  var card=$("ovCard");
+  card.className="card"+(bingo?" bingo":"");
+  $("ovEm").textContent=bingo?"🎃👻🎃":"🕸️🕷️🕸️";
+  $("ovTitle").textContent=bingo?"🎃 ¡BINGO! 🎃":"🕸️ ¡LÍNEA! 🕸️";
+  $("ovMsg").textContent=bingo?"¡Completaste todos los disfraces!":"¡Línea completa!";
+  $("ovOk").textContent=bingo?"¡Genial!":"¡Seguir jugando!";
+  $("ov").classList.add("show");
+  confetti(bingo?46:22,bingo?["🎃","👻","🦇","🕷️","⭐","🧙‍♀️","🌙"]:["🦇","👻","✨","🕸️"]);
+  clearTimeout(fxTimer);
+  if(!bingo) fxTimer=setTimeout(closeOv,3200);
+  if(navigator.vibrate){try{navigator.vibrate(bingo?[80,60,80,60,160]:[70]);}catch(e){}}
+}
+function closeOv(){ $("ov").classList.remove("show"); clearTimeout(fxTimer); }
+function confetti(n,set){
+  var fx=$("fx"); fx.innerHTML="";
+  for(var i=0;i<n;i++){
+    var s=document.createElement("span");
+    s.textContent=set[i%set.length];
+    s.style.left=(Math.random()*96)+"vw";
+    s.style.fontSize=(16+Math.random()*18)+"px";
+    s.style.animationDuration=(2+Math.random()*2.2)+"s";
+    s.style.animationDelay=(Math.random()*.7)+"s";
+    fx.appendChild(s);
+  }
+  setTimeout(function(){fx.innerHTML="";},5200);
+}
+
+$("ovOk").addEventListener("click",closeOv);
+$("ov").addEventListener("click",function(e){ if(e.target===this) closeOv(); });
+$("altBtn").addEventListener("click",function(){ swapMode=!swapMode; render(); });
+$("resetBtn").addEventListener("click",function(){ $("confirm").classList.add("show"); });
+$("cNo").addEventListener("click",function(){ $("confirm").classList.remove("show"); });
+$("cYes").addEventListener("click",function(){
+  state=freshState(); swapMode=false; prevDone={}; save(); render();
+  $("confirm").classList.remove("show"); closeOv();
+});
+
+/* evita zoom por doble toque en iOS */
+var lastTouch=0;
+document.addEventListener("touchend",function(e){
+  var t=Date.now(); if(t-lastTouch<350) e.preventDefault(); lastTouch=t;
+},{passive:false});
+document.addEventListener("gesturestart",function(e){e.preventDefault();});
+
+load(); build(); prevDone=doneLines(); render();
+
+/* ---- Service worker (modo sin conexión) ---- */
+if("serviceWorker" in navigator && location.protocol.indexOf("http")===0){
+  window.addEventListener("load",function(){
+    navigator.serviceWorker.register("sw.js").catch(function(){});
+  });
+}
+
+/* API mínima para pruebas */
+window.__bingo={LINES:LINES,state:function(){return state;}};
+})();
+</script>
+</body>
+</html>
