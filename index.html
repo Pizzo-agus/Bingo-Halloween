@@ -29,7 +29,7 @@ body{
     radial-gradient(circle at 50% -10%,rgba(255,122,26,.20),transparent 55%),
     radial-gradient(circle at 100% 100%,rgba(107,63,160,.28),transparent 50%),
     var(--bg);
-  user-select:none;-webkit-user-select:none;
+  user-select:none;-webkit-user-select:none;touch-action:manipulation;
   overflow-x:hidden;position:relative;
 }
 .web{position:fixed;width:120px;height:120px;pointer-events:none;opacity:.5;z-index:0}
@@ -166,23 +166,9 @@ var INITIAL=[
 ];
 var INITIAL_ALT={n:"Vaca y vaquero o dinosaurio",e:"🐄"};
 
-/* ---- Líneas: 3 consecutivos horizontal, vertical y diagonal ---- */
-function buildLines(){
-  var L=[], r, c, idx=function(r,c){return r*COLS+c;};
-  for(r=0;r<ROWS;r++) L.push([idx(r,0),idx(r,1),idx(r,2)]);                 // 7 horizontales
-  for(c=0;c<COLS;c++) for(r=0;r<=ROWS-3;r++) L.push([idx(r,c),idx(r+1,c),idx(r+2,c)]); // 15 verticales
-  for(r=0;r<=ROWS-3;r++){                                                    // 10 diagonales (ventanas 3x3)
-    L.push([idx(r,0),idx(r+1,1),idx(r+2,2)]);
-    L.push([idx(r,2),idx(r+1,1),idx(r+2,0)]);
-  }
-  return L;
-}
-var LINES=buildLines();
-
 function $(id){return document.getElementById(id);}
 var gridEl=$("grid"), cells=[];
 var state=freshState();
-var prevDone={};      // líneas completas en el estado anterior
 var swapMode=false;
 
 function freshState(){
@@ -198,10 +184,6 @@ function load(){
 }
 function save(){ try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){} }
 
-function doneLines(){
-  var o={}; LINES.forEach(function(l,i){ if(l.every(function(k){return state.marked[k];})) o[i]=true; });
-  return o;
-}
 function count(){return state.marked.filter(Boolean).length;}
 
 function build(){
@@ -239,35 +221,26 @@ function onCell(i){
     state.names[i]=state.alt; state.alt=old;
     state.marked[i]=false;
     swapMode=false;
-    prevDone=doneLines(); save(); render();
+    save(); render();
     return;
   }
   state.marked[i]=!state.marked[i];
-  var now=doneLines(), isNew=false;
-  for(var k in now) if(!prevDone[k]) isNew=true;
-  prevDone=now; save(); render();
-  if(state.marked[i]){
-    if(count()===TOTAL) celebrate(true);
-    else if(isNew) celebrate(false);
-  }
+  save(); render();
+  if(state.marked[i] && count()===TOTAL) celebrate();
 }
 
 /* ---- Celebración ---- */
-var fxTimer=null;
-function celebrate(bingo){
-  var card=$("ovCard");
-  card.className="card"+(bingo?" bingo":"");
-  $("ovEm").textContent=bingo?"🎃👻🎃":"🕸️🕷️🕸️";
-  $("ovTitle").textContent=bingo?"🎃 ¡BINGO! 🎃":"🕸️ ¡LÍNEA! 🕸️";
-  $("ovMsg").textContent=bingo?"¡Completaste todos los disfraces!":"¡Línea completa!";
-  $("ovOk").textContent=bingo?"¡Genial!":"¡Seguir jugando!";
+function celebrate(){
+  $("ovCard").className="card bingo";
+  $("ovEm").textContent="🎃👻🎃";
+  $("ovTitle").textContent="🎃 ¡BINGO! 🎃";
+  $("ovMsg").textContent="¡Completaste todos los disfraces!";
+  $("ovOk").textContent="¡Genial!";
   $("ov").classList.add("show");
-  confetti(bingo?46:22,bingo?["🎃","👻","🦇","🕷️","⭐","🧙‍♀️","🌙"]:["🦇","👻","✨","🕸️"]);
-  clearTimeout(fxTimer);
-  if(!bingo) fxTimer=setTimeout(closeOv,3200);
-  if(navigator.vibrate){try{navigator.vibrate(bingo?[80,60,80,60,160]:[70]);}catch(e){}}
+  confetti(46,["🎃","👻","🦇","🕷️","⭐","🧙‍♀️","🌙"]);
+  if(navigator.vibrate){try{navigator.vibrate([80,60,80,60,160]);}catch(e){}}
 }
-function closeOv(){ $("ov").classList.remove("show"); clearTimeout(fxTimer); }
+function closeOv(){ $("ov").classList.remove("show"); }
 function confetti(n,set){
   var fx=$("fx"); fx.innerHTML="";
   for(var i=0;i<n;i++){
@@ -288,18 +261,14 @@ $("altBtn").addEventListener("click",function(){ swapMode=!swapMode; render(); }
 $("resetBtn").addEventListener("click",function(){ $("confirm").classList.add("show"); });
 $("cNo").addEventListener("click",function(){ $("confirm").classList.remove("show"); });
 $("cYes").addEventListener("click",function(){
-  state=freshState(); swapMode=false; prevDone={}; save(); render();
+  state=freshState(); swapMode=false; save(); render();
   $("confirm").classList.remove("show"); closeOv();
 });
 
-/* evita zoom por doble toque en iOS */
-var lastTouch=0;
-document.addEventListener("touchend",function(e){
-  var t=Date.now(); if(t-lastTouch<350) e.preventDefault(); lastTouch=t;
-},{passive:false});
+/* el zoom por doble toque se evita con "touch-action: manipulation" (CSS); acá solo se bloquea el pellizco en iOS */
 document.addEventListener("gesturestart",function(e){e.preventDefault();});
 
-load(); build(); prevDone=doneLines(); render();
+load(); build(); render();
 
 /* ---- Service worker (modo sin conexión) ---- */
 if("serviceWorker" in navigator && location.protocol.indexOf("http")===0){
@@ -309,7 +278,7 @@ if("serviceWorker" in navigator && location.protocol.indexOf("http")===0){
 }
 
 /* API mínima para pruebas */
-window.__bingo={LINES:LINES,state:function(){return state;}};
+window.__bingo={state:function(){return state;}};
 })();
 </script>
 </body>
